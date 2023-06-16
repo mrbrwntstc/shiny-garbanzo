@@ -5,12 +5,21 @@ find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_path(LINMATH_INCLUDE_DIRS "linmath.h/linmath.h")
 
+set(ARRAY_LIST_SRC_FILES
+  "src/engine/array_list/array_list.c"
+)
+
 set(CONFIG_SRC_FILES
   "src/engine/config/config.c"
 )
 
 set(IO_SOURCE_FILES
   "src/engine/io/io.c"
+)
+
+set(PHYSICS_SRC_FILES
+  "src/engine/physics/physics_internal.h"
+  "src/engine/physics/physics.c"
 )
 
 set(RENDER_SOURCE_FILES
@@ -25,11 +34,13 @@ set(TIME_SRC_FILES
 )
 
 set(ENGINE_HEADER_FILES
+  "src/engine/array_list.h"
   "src/engine/config.h"
   "src/engine/global.c"
   "src/engine/global.h"
   "src/engine/input.h"
   "src/engine/io.h"
+  "src/engine/physics.h"
   "src/engine/time.h"
   "src/engine/render.h"
   "src/engine/types.h"
@@ -37,8 +48,10 @@ set(ENGINE_HEADER_FILES
 )
 
 set(SOURCE_FILES
+  ${ARRAY_LIST_SRC_FILES}
   ${CONFIG_SRC_FILES}
   ${IO_SOURCE_FILES}
+  ${PHYSICS_SRC_FILES}
   ${RENDER_SOURCE_FILES}
   ${TIME_SRC_FILES}
   ${ENGINE_HEADER_FILES}

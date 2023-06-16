@@ -5,7 +5,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "engine/config.h"
 #include "engine/global.h"
+#include "engine/input.h"
+#include "engine/physics.h"
+#include "engine/time.h"
 
 static void
 glfw_error_callback (int error, const char *description)
@@ -24,22 +28,15 @@ static u8 key_press = GLFW_FALSE;
 static void
 glfw_key_callback (GLFWwindow *game_window, i32 key, i32 scancode, i32 action, i32 mods)
 {
-  printf ("scancode: %d\n", scancode);
-  printf ("left: %d\n", global.config.keybinds[Input_Key_Left]);
-  printf ("right: %d\n", global.config.keybinds[Input_Key_Right]);
-  printf ("up: %d\n", global.config.keybinds[Input_Key_Up]);
-  printf ("down: %d\n", global.config.keybinds[Input_Key_Down]);
-
   if (scancode == global.config.keybinds[Input_Key_Left]) {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-      puts ("going left");
       global.input.left = Key_State_Pressed;
-    } else
+    } else {
       global.input.left = Key_State_Released;
+    }
   }
   if (scancode == global.config.keybinds[Input_Key_Right]) {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-      puts ("going right");
       global.input.right = Key_State_Pressed;
     } else {
       global.input.right = Key_State_Released;
@@ -47,7 +44,6 @@ glfw_key_callback (GLFWwindow *game_window, i32 key, i32 scancode, i32 action, i
   }
   if (scancode == global.config.keybinds[Input_Key_Up]) {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-      puts ("going up");
       global.input.up = Key_State_Pressed;
     } else {
       global.input.up = Key_State_Released;
@@ -55,14 +51,14 @@ glfw_key_callback (GLFWwindow *game_window, i32 key, i32 scancode, i32 action, i
   }
   if (scancode == global.config.keybinds[Input_Key_Down]) {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-      puts ("going down");
       global.input.down = Key_State_Pressed;
     } else {
       global.input.down = Key_State_Released;
     }
   }
-  if (scancode == global.config.keybinds[Input_Key_Escape] && action == GLFW_PRESS)
+  if (scancode == global.config.keybinds[Input_Key_Escape] && action == GLFW_PRESS) {
     glfwSetWindowShouldClose (game_window, GLFW_TRUE);
+  }
 }
 
 static vec2 pos;
@@ -94,6 +90,15 @@ main (void)
   glfwSetKeyCallback (global.render.game_window, glfw_key_callback);
   config_init ();
   time_init (60);
+  physics_init ();
+
+  u32 body_count = 100;
+  for (u32 i = 0; i < body_count; ++i) {
+    usize body_index = physics_body_create ((vec2){ rand () % (i32)global.render.game_window_width, rand () % (i32)global.render.game_window_height }, (vec2){ rand () % 100, rand () % 100 });
+    body *body = physics_body_get (body_index);
+    body->acceleration[0] = rand () % 200 - 100;
+    body->acceleration[1] = rand () % 200 - 100;
+  }
 
   pos[0] = global.render.game_window_width * 0.5f;
   pos[1] = global.render.game_window_height * 0.5f;
@@ -102,6 +107,7 @@ main (void)
     time_update ();
 
     input_handle ();
+    physics_update ();
 
     render_begin ();
     // clang-format off
@@ -110,6 +116,27 @@ main (void)
       (vec2){ 50.0f, 50.0f }, 
       (vec4){ 0.0f, 1.0f, 0.0f, 1.0f }
     );
+
+    for(u32 i = 0; i < body_count; ++i) {
+      body *body = physics_body_get (i);
+      render_quad(body->aabb.position, body->aabb.half_size, (vec4){ 1.0f, 0.0f, 0.0f, 1.0f });
+
+      if(body->aabb.position[0] > global.render.game_window_width || body->aabb.position[0] < 0) {
+        body->velocity[0] *= -1;
+      }
+      if(body->aabb.position[1] > global.render.game_window_height || body->aabb.position[1] < 0) {
+        body->velocity[1] *= -1;
+      }
+
+      if(body->velocity[0] > 500)
+        body->velocity[0] = 500;
+      if(body->velocity[0] < -500)
+        body->velocity[0] = -500;
+      if(body->velocity[1] > 500)
+        body->velocity[1] = 500;
+      if(body->velocity[1] < -500)
+        body->velocity[1] = -500;
+    }
     // clang-format on
     render_end ();
     time_update_late ();
