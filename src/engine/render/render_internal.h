@@ -6,11 +6,13 @@
 #include "../render.h"
 #include "../types.h"
 
-typedef struct render_state_internal_t
-{
+typedef struct render_state_internal_t {
   u32 vao_quad;
   u32 vbo_quad;
   u32 ebo_quad;
+
+  u32 vao_line;
+  u32 vbo_line;
 
   u32 shader_default;
   u32 texture_color;
@@ -42,5 +44,7 @@ void render_init_shaders (render_state_internal *state);
 /// @param path_fragment_shader  fragment shader file path location
 /// @return OpenGL shader program id
 u32 render_shader_create (const char *path_vertex_shader, const char *path_fragment_shader);
+
+void render_init_line (u32 *vao, u32 *vbo);
 
 #endif // __ENGINE_RENDER_INTERNAL_H__
