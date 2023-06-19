@@ -21,5 +21,8 @@ void physics_update (void);
 usize physics_body_create (vec2 position, vec2 size);
 body *physics_body_get (usize index);
 bool physics_point_intersect_aabb (vec2 point, aabb aabb);
+bool physics_aabb_intersect_aabb (aabb a, aabb b);
+aabb aabb_minkowski_difference (aabb a, aabb b);
+void aabb_penetration_vector (vec2 r, aabb aabb);
 
 #endif // __ENGINE_PHYSICS_H__

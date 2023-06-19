@@ -105,7 +105,32 @@ main (void)
   pos[0] = global.render.game_window_width * 0.5f;
   pos[1] = global.render.game_window_height * 0.5f;
 
-  aabb test_aabb = { .position = { global.render.game_window_width * 0.5, global.render.game_window_height * 0.5 }, .half_size = { 50, 50 } };
+  // clang-format off
+
+  aabb test_aabb = { 
+    .position = { 
+      global.render.game_window_width * 0.5,
+      global.render.game_window_height * 0.5 
+    },
+    .half_size = { 50, 50 }
+  };
+
+  aabb cursor_aabb = { .half_size = { 75, 75 } };
+
+  aabb start_aabb = {.half_size = {75,75}};
+
+
+  aabb sum_aabb = {
+    .position = { 
+      test_aabb.position[0],
+      test_aabb.position[1] }, 
+    .half_size = { 
+      test_aabb.half_size[0] + cursor_aabb.half_size[0],
+      test_aabb.half_size[1] + cursor_aabb.half_size[1] 
+    } 
+  };
+
+  // clang-format on
 
   while (!glfwWindowShouldClose (global.render.game_window)) {
     time_update ();
@@ -113,15 +138,50 @@ main (void)
     input_handle ();
     physics_update ();
 
+    i32 mouse_left_button_state = glfwGetMouseButton (global.render.game_window, GLFW_MOUSE_BUTTON_LEFT);
+    if (mouse_left_button_state == GLFW_PRESS) {
+      start_aabb.position[0] = pos[0];
+      start_aabb.position[1] = pos[1];
+    }
+
     render_begin ();
 
-    render_aabb ((f32 *)&test_aabb, (vec4){ 1, 1, 1, 0.5 });
+    cursor_aabb.position[0] = pos[0];
+    cursor_aabb.position[1] = pos[1];
+
+    render_aabb ((f32 *)&test_aabb, WHITE);
+    render_aabb ((f32 *)&sum_aabb, (vec4){ 1, 1, 1, 0.5 });
+    render_aabb ((f32 *)&cursor_aabb, RED);
+
+    aabb minkowski_difference = aabb_minkowski_difference (test_aabb, cursor_aabb);
+    render_aabb ((f32 *)&minkowski_difference, ORANGE);
+
+    vec2 pv;
+    aabb_penetration_vector (pv, minkowski_difference);
+
+    aabb collision_aabb = cursor_aabb;
+
+    collision_aabb.position[0] += pv[0];
+    collision_aabb.position[1] += pv[1];
+
+    if (physics_aabb_intersect_aabb (test_aabb, cursor_aabb)) {
+      render_aabb ((f32 *)&cursor_aabb, RED);
+      render_aabb ((f32 *)&collision_aabb, CYAN);
+
+      vec2_add (pv, pos, pv);
+      render_line_segment (pos, pv, CYAN);
+    } else {
+      render_aabb ((f32 *)&cursor_aabb, WHITE);
+    }
 
     if (physics_point_intersect_aabb (pos, test_aabb)) {
       render_quad (pos, (vec2){ 5, 5 }, RED);
     } else {
       render_quad (pos, (vec2){ 5, 5 }, WHITE);
     }
+
+    render_aabb ((f32 *)&start_aabb, (vec4){ 1, 1, 1, 0.5 });
+    render_line_segment (start_aabb.position, pos, WHITE);
 
     render_end ();
 
