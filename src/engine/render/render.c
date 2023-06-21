@@ -10,8 +10,8 @@ void
 render_init (void)
 {
   // set game window dimensions
-  global.render.game_window_width = 800;
-  global.render.game_window_height = 600;
+  global.render.game_window_width = 1920;
+  global.render.game_window_height = 1080;
   global.render.game_window = render_init_window (global.render.game_window_width, global.render.game_window_height);
 
   render_init_quad (&state.vao_quad, &state.vbo_quad, &state.ebo_quad);

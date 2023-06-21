@@ -16,6 +16,12 @@ typedef struct body_t {
   vec2 acceleration;
 } body;
 
+typedef struct hit_t {
+  bool is_hit;
+  f32 time;
+  vec2 position;
+} hit;
+
 void physics_init (void);
 void physics_update (void);
 usize physics_body_create (vec2 position, vec2 size);
@@ -24,5 +30,7 @@ bool physics_point_intersect_aabb (vec2 point, aabb aabb);
 bool physics_aabb_intersect_aabb (aabb a, aabb b);
 aabb aabb_minkowski_difference (aabb a, aabb b);
 void aabb_penetration_vector (vec2 r, aabb aabb);
+void aabb_min_max (vec2 min, vec2 max, aabb aabb);
+hit ray_intersect_aabb (vec2 position, vec2 magnitude, aabb aabb);
 
 #endif // __ENGINE_PHYSICS_H__
