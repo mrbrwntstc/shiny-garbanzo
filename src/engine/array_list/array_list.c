@@ -4,10 +4,10 @@
 #include "../array_list.h"
 #include "../util.h"
 
-array_list *
+Array_List *
 array_list_create (usize item_size, usize initial_capacity)
 {
-  array_list *list = malloc (sizeof (array_list));
+  Array_List *list = malloc (sizeof (Array_List));
 
   if (!list)
     ERROR_RETURN (NULL, "Could not allocate memory for array list.\n");
@@ -26,7 +26,7 @@ array_list_create (usize item_size, usize initial_capacity)
 }
 
 usize
-array_list_append (array_list *list, void *item)
+array_list_append (Array_List *list, void *item)
 {
   if (list->len == list->capacity) {
     list->capacity = (list->capacity > 0) ? list->capacity * 2 : 1;
@@ -46,7 +46,7 @@ array_list_append (array_list *list, void *item)
 }
 
 void *
-array_list_get (array_list *list, usize index)
+array_list_get (Array_List *list, usize index)
 {
   if (list->len == 0)
     ERROR_RETURN (NULL, "Array list is empty.\n");
@@ -55,7 +55,7 @@ array_list_get (array_list *list, usize index)
 }
 
 u8
-array_list_remove (array_list *list, usize index)
+array_list_remove (Array_List *list, usize index)
 {
   if (list->len == 0)
     ERROR_RETURN (1, "Array list is empty.\n");

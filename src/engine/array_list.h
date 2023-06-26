@@ -12,11 +12,11 @@ typedef struct array_list_t {
   usize capacity;
   usize item_size;
   void *items;
-} array_list;
+} Array_List;
 
-array_list *array_list_create (usize item_size, usize initial_capacity);
-usize array_list_append (array_list *list, void *item);
-void *array_list_get (array_list *list, usize index);
-u8 array_list_remove (array_list *list, usize index);
+Array_List *array_list_create (usize item_size, usize initial_capacity);
+usize array_list_append (Array_List *list, void *item);
+void *array_list_get (Array_List *list, usize index);
+u8 array_list_remove (Array_List *list, usize index);
 
 #endif // __ENGINE_ARRAY_LIST_H__

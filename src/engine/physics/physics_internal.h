@@ -5,7 +5,10 @@
 #include "../types.h"
 
 typedef struct physics_state_internal_t {
-  array_list *body_list;
+  f32 gravity;
+  f32 terminal_velocity;
+  Array_List *body_list;
+  Array_List *static_body_list;
 } physics_state_internal;
 
 #endif // __ENGINE_PHYSICS_INTERNALL_H__
