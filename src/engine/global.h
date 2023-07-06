@@ -9,7 +9,6 @@
 #include "time.h"
 
 typedef struct global_variables_t {
-  render_state render;
   config_state config;
   input_state input;
   time_state time;

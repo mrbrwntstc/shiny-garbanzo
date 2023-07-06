@@ -10,6 +10,7 @@
 #include "engine/global.h"
 #include "engine/input.h"
 #include "engine/physics.h"
+#include "engine/render.h"
 #include "engine/time.h"
 #include "engine/util.h"
 
@@ -79,17 +80,14 @@ input_handle (Body *body_player)
   f32 vely = body_player->velocity[1];
 
   if (global.input.right) {
-    velx += 500;
+    velx += 600;
   }
   if (global.input.left) {
-    velx -= 500;
+    velx -= 600;
   }
   if (global.input.up && player_is_grounded) {
     player_is_grounded = false;
-    vely = 4000;
-  }
-  if (global.input.down) {
-    vely -= 800;
+    vely = 2000;
   }
 
   body_player->velocity[0] = velx;
@@ -117,11 +115,11 @@ void
 enemy_on_hit_static (Body *self, Static_Body *other, Hit hit)
 {
   if (hit.normal[0] > 0) {
-    self->velocity[0] = 700;
+    self->velocity[0] = 400;
   }
 
   if (hit.normal[0] < 0) {
-    self->velocity[0] = -700;
+    self->velocity[0] = -400;
   }
 }
 
@@ -130,10 +128,10 @@ main (void)
 {
   glfwSetErrorCallback (glfw_error_callback);
 
-  render_init ();
-  glfwSetFramebufferSizeCallback (global.render.game_window, glfw_framebuffer_size_callback);
-  glfwSetKeyCallback (global.render.game_window, glfw_key_callback);
-  glfwSetInputMode (global.render.game_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  GLFWwindow *game_window = render_init ();
+  glfwSetFramebufferSizeCallback (game_window, glfw_framebuffer_size_callback);
+  glfwSetKeyCallback (game_window, glfw_key_callback);
+  glfwSetInputMode (game_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   config_init ();
   time_init (60);
   physics_init ();
@@ -142,21 +140,23 @@ main (void)
   u8 enemy_mask = Collision_Layer_Player | Collision_Layer_Terrain;
   u8 player_mask = Collision_Layer_Enemy | Collision_Layer_Terrain;
 
-  usize player_id = entity_create ((vec2){ 100, 800 }, (vec2){ 100, 100 }, (vec2){ 0, 0 }, Collision_Layer_Player, player_mask, player_on_hit, player_on_hit_static);
+  usize player_id = entity_create ((vec2){ 100, 200 }, (vec2){ 24, 24 }, (vec2){ 0, 0 }, Collision_Layer_Player, player_mask, player_on_hit, player_on_hit_static);
 
-  f32 width = global.render.game_window_width;
-  f32 height = global.render.game_window_height;
+  i32 game_window_width, game_window_height;
+  glfwGetWindowSize (game_window, &game_window_width, &game_window_height);
+  f32 width = game_window_width / render_get_scale ();
+  f32 height = game_window_height / render_get_scale ();
 
-  u32 static_body_a_id = physics_static_body_create ((vec2){ width * 0.5 - 25, height - 25 }, (vec2){ width - 50, 50 }, Collision_Layer_Terrain);
-  u32 static_body_b_id = physics_static_body_create ((vec2){ width - 25, height * 0.5 + 25 }, (vec2){ 50, height - 50 }, Collision_Layer_Terrain);
-  u32 static_body_c_id = physics_static_body_create ((vec2){ width * 0.5 + 25, 25 }, (vec2){ width - 50, 50 }, Collision_Layer_Terrain);
-  u32 static_body_d_id = physics_static_body_create ((vec2){ 25, height * 0.5 - 25 }, (vec2){ 50, height - 50 }, Collision_Layer_Terrain);
+  u32 static_body_a_id = physics_static_body_create ((vec2){ width * 0.5 - 12.5, height - 12.5 }, (vec2){ width - 25, 25 }, Collision_Layer_Terrain);
+  u32 static_body_b_id = physics_static_body_create ((vec2){ width - 12.5, height * 0.5 + 12.5 }, (vec2){ 25, height - 25 }, Collision_Layer_Terrain);
+  u32 static_body_c_id = physics_static_body_create ((vec2){ width * 0.5 + 12.5, 12.5 }, (vec2){ width - 25, 25 }, Collision_Layer_Terrain);
+  u32 static_body_d_id = physics_static_body_create ((vec2){ 12.5, height * 0.5 - 12.5 }, (vec2){ 25, height - 25 }, Collision_Layer_Terrain);
   u32 static_body_e_id = physics_static_body_create ((vec2){ width * 0.5, height * 0.5 }, (vec2){ 150, 150 }, Collision_Layer_Terrain);
 
-  usize entity_a_id = entity_create ((vec2){ 600, 600 }, (vec2){ 50, 50 }, (vec2){ 900, 0 }, Collision_Layer_Enemy, enemy_mask, NULL, enemy_on_hit_static);
-  usize entity_b_id = entity_create ((vec2){ 800, 800 }, (vec2){ 50, 50 }, (vec2){ 900, 0 }, 0, enemy_mask, NULL, enemy_on_hit_static);
+  usize entity_a_id = entity_create ((vec2){ 200, 200 }, (vec2){ 25, 25 }, (vec2){ 400, 0 }, Collision_Layer_Enemy, enemy_mask, NULL, enemy_on_hit_static);
+  usize entity_b_id = entity_create ((vec2){ 300, 300 }, (vec2){ 25, 25 }, (vec2){ 400, 0 }, 0, enemy_mask, NULL, enemy_on_hit_static);
 
-  while (!glfwWindowShouldClose (global.render.game_window)) {
+  while (!glfwWindowShouldClose (game_window)) {
     time_update ();
 
     Entity *player = entity_get (player_id);
@@ -182,7 +182,7 @@ main (void)
     render_aabb ((f32 *)physics_body_get (entity_get (entity_a_id)->body_id), WHITE);
     render_aabb ((f32 *)physics_body_get (entity_get (entity_b_id)->body_id), WHITE);
 
-    render_end ();
+    render_end (game_window);
 
     player_color[0] = 0;
     player_color[2] = 1;
@@ -190,7 +190,7 @@ main (void)
     time_update_late ();
   }
 
-  glfwDestroyWindow (global.render.game_window);
+  glfwDestroyWindow (game_window);
   glfwTerminate ();
 
   exit (EXIT_SUCCESS);

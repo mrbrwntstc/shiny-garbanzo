@@ -2,6 +2,7 @@
 #define __ENGINE_TYPES_H__
 
 #include <inttypes.h>
+#include <stddef.h>
 
 // simplified and standardized data types
 

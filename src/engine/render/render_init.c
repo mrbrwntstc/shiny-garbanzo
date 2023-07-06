@@ -36,19 +36,20 @@ render_init_window (f32 width, f32 height)
 }
 
 void
-render_init_shaders (render_state_internal *state)
+render_init_shaders (u32 *shader_default, f32 render_width, f32 render_height)
 {
-  state->shader_default = render_shader_create ("shaders/default.vert", "shaders/default.frag");
+  mat4x4 projection_matrix;
+  *shader_default = render_shader_create ("shaders/default.vert", "shaders/default.frag");
 
-  mat4x4_ortho (state->projection_matrix, 0, global.render.game_window_width, 0, global.render.game_window_height, -2, 2);
+  mat4x4_ortho (projection_matrix, 0, render_width, 0, render_height, -2, 2);
 
-  glUseProgram (state->shader_default);
+  glUseProgram (*shader_default);
   // clang-format off
   glUniformMatrix4fv(
-    glGetUniformLocation(state->shader_default, "projection"),
+    glGetUniformLocation(*shader_default, "projection"),
     1,
     GL_FALSE,
-    &state->projection_matrix[0][0]
+    &projection_matrix[0][0]
   );
   // clang-format on
 }

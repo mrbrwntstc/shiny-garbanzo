@@ -8,27 +8,13 @@
 
 #include "types.h"
 
-/// @brief All information regarding the game window
-typedef struct render_state_t {
-  GLFWwindow *game_window;
-  f32 game_window_width;
-  f32 game_window_height;
-} render_state;
-
-/// @brief Set the game window's dimensinos, then call all render_init methods
-void render_init (void);
-/// @brief Clear the screen for the upcoming frame
+GLFWwindow *render_init (void);
 void render_begin (void);
-/// @brief Poll for events and swap frame buffers
-void render_end (void);
-/// @brief Use OpenGL methods to draw a quad
-/// @param pos    {x, y}
-/// @param size   {length, width}
-/// @param color  {R, G, B, A}
+void render_end (GLFWwindow *game_window);
 void render_quad (vec2 pos, vec2 size, vec4 color);
-
 void render_quad_line (vec2 pos, vec2 size, vec4 color);
 void render_line_segment (vec2 start, vec2 end, vec4 color);
 void render_aabb (f32 *aabb, vec4 color);
+f32 render_get_scale ();
 
 #endif // __ENGINE_RENDER_H__
