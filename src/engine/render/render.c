@@ -1,5 +1,6 @@
 #include <glad/glad.h>
 
+#include "../array_list.h"
 #include "../global.h"
 #include "../render.h"
 #include "render_internal.h"
@@ -17,6 +18,11 @@ static u32 vao_line;
 static u32 vbo_line;
 static u32 shader_default;
 static u32 texture_color;
+static u32 vao_batch;
+static u32 vbo_batch;
+static u32 ebo_batch;
+static u32 shader_batch;
+static Array_List *list_batch;
 
 GLFWwindow *
 render_init (void)
@@ -26,12 +32,15 @@ render_init (void)
   GLFWwindow *game_window = render_init_window (game_window_width, game_window_height);
 
   render_init_quad (&vao_quad, &vbo_quad, &ebo_quad);
+  render_init_batch_quads (&vao_batch, &vbo_batch, &ebo_batch);
   render_init_line (&vao_line, &vbo_line);
-  render_init_shaders (&shader_default, render_width, render_height);
+  render_init_shaders (&shader_default, &shader_batch, render_width, render_height);
   render_init_color_texture (&texture_color);
 
   glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  list_batch = array_list_create (sizeof (batch_vertex), 8);
 
   return game_window;
 }
@@ -41,11 +50,61 @@ render_begin (void)
 {
   glClearColor (0.08f, 0.1f, 0.1f, 1.0f);
   glClear (GL_COLOR_BUFFER_BIT);
+
+  list_batch->len = 0;
+}
+
+static void
+render_batch (batch_vertex *vertices, usize count, u32 texture_id)
+{
+  glBindBuffer (GL_ARRAY_BUFFER, vbo_batch);
+  glBufferSubData (GL_ARRAY_BUFFER, 0, count * sizeof (batch_vertex), vertices);
+
+  glActiveTexture (GL_TEXTURE0);
+  glBindTexture (GL_TEXTURE_2D, texture_id);
+
+  glUseProgram (shader_batch);
+  glBindVertexArray (vao_batch);
+
+  glDrawElements (GL_TRIANGLES, (count >> 2) * 6, GL_UNSIGNED_INT, 0);
+}
+
+void
+append_quad (vec2 position, vec2 size, vec4 texture_coordinates, vec4 color)
+{
+  vec4 uvs = { 0, 0, 1, 1 };
+
+  if (texture_coordinates != NULL) {
+    memcpy (uvs, texture_coordinates, sizeof (vec4));
+  }
+
+  array_list_append (list_batch, &(batch_vertex){
+                                   .position = { position[0], position[1] },
+                                   .uvs = { uvs[0], uvs[1] },
+                                   .color = { color[0], color[1], color[2], color[3] },
+                                 });
+  array_list_append (list_batch, &(batch_vertex){
+                                   .position = { position[0] + size[0], position[1] },
+                                   .uvs = { uvs[2], uvs[1] },
+                                   .color = { color[0], color[1], color[2], color[3] },
+                                 });
+  array_list_append (list_batch, &(batch_vertex){
+                                   .position = { position[0] + size[0], position[1] + size[1] },
+                                   .uvs = { uvs[2], uvs[3] },
+                                   .color = { color[0], color[1], color[2], color[3] },
+                                 });
+  array_list_append (list_batch, &(batch_vertex){
+                                   .position = { position[0], position[1] + size[1] },
+                                   .uvs = { uvs[0], uvs[3] },
+                                   .color = { color[0], color[1], color[2], color[3] },
+                                 });
 }
 
 void
 render_end (GLFWwindow *game_window)
 {
+  render_batch (list_batch->items, list_batch->len, texture_color);
+
   glfwSwapBuffers (game_window);
   glfwPollEvents ();
 }

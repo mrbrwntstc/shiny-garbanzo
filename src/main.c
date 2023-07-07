@@ -151,7 +151,7 @@ main (void)
   u32 static_body_b_id = physics_static_body_create ((vec2){ width - 12.5, height * 0.5 + 12.5 }, (vec2){ 25, height - 25 }, Collision_Layer_Terrain);
   u32 static_body_c_id = physics_static_body_create ((vec2){ width * 0.5 + 12.5, 12.5 }, (vec2){ width - 25, 25 }, Collision_Layer_Terrain);
   u32 static_body_d_id = physics_static_body_create ((vec2){ 12.5, height * 0.5 - 12.5 }, (vec2){ 25, height - 25 }, Collision_Layer_Terrain);
-  u32 static_body_e_id = physics_static_body_create ((vec2){ width * 0.5, height * 0.5 }, (vec2){ 150, 150 }, Collision_Layer_Terrain);
+  u32 static_body_e_id = physics_static_body_create ((vec2){ width * 0.5, height * 0.5 }, (vec2){ 62.5, 62.5 }, Collision_Layer_Terrain);
 
   usize entity_a_id = entity_create ((vec2){ 200, 200 }, (vec2){ 25, 25 }, (vec2){ 400, 0 }, Collision_Layer_Enemy, enemy_mask, NULL, enemy_on_hit_static);
   usize entity_b_id = entity_create ((vec2){ 300, 300 }, (vec2){ 25, 25 }, (vec2){ 400, 0 }, 0, enemy_mask, NULL, enemy_on_hit_static);
@@ -181,6 +181,11 @@ main (void)
 
     render_aabb ((f32 *)physics_body_get (entity_get (entity_a_id)->body_id), WHITE);
     render_aabb ((f32 *)physics_body_get (entity_get (entity_b_id)->body_id), WHITE);
+
+    for (u32 i = 0; i < 10000; ++i) {
+      vec4 color = { (rand () % 255) / 255.0, (rand () % 255) / 255.0, (rand () % 255) / 255.0, (rand () % 255) / 255.0 };
+      append_quad ((vec2){ rand () % 640, rand () % 360 }, (vec2){ rand () % 100, rand () % 100 }, NULL, color);
+    }
 
     render_end (game_window);
 

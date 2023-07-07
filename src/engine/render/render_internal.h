@@ -9,7 +9,8 @@
 GLFWwindow *render_init_window (f32 width, f32 height);
 void render_init_quad (u32 *vao_quad, u32 *vbo_quad, u32 *ebo_quad);
 void render_init_color_texture (u32 *texture);
-void render_init_shaders (u32 *shader_default, f32 render_width, f32 render_height);
+void render_init_shaders (u32 *shader_default, u32 *shader_batch, f32 render_width, f32 render_height);
+void render_init_batch_quads (u32 *vao_batch, u32 *vbo_batch, u32 *ebo_batch);
 u32 render_shader_create (const char *path_vertex_shader, const char *path_fragment_shader);
 void render_init_line (u32 *vao, u32 *vbo);
 
