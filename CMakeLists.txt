@@ -48,6 +48,7 @@ set(ENGINE_HEADER_FILES
   "src/engine/physics.h"
   "src/engine/time.h"
   "src/engine/render.h"
+  "src/engine/stb_image.h"
   "src/engine/types.h"
   "src/engine/util.h"
 )
