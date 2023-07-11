@@ -234,7 +234,7 @@ calculate_sprite_texture_coordinates (vec4 result, f32 row, f32 column, f32 text
 }
 
 void
-render_sprite_sheet_frame (Sprite_Sheet *sprite_sheet, f32 row, f32 column, vec2 position)
+render_sprite_sheet_frame (Sprite_Sheet *sprite_sheet, f32 row, f32 column, vec2 position, bool is_flipped)
 {
   vec4 uvs;
   // clang-format off
@@ -248,6 +248,12 @@ render_sprite_sheet_frame (Sprite_Sheet *sprite_sheet, f32 row, f32 column, vec2
     sprite_sheet->cell_height
   );
   // clang-format on 
+
+  if(is_flipped) {
+    f32 tmp = uvs[0];
+    uvs[0] = uvs[2];
+    uvs[2] = tmp;
+  }
 
   vec2 size = {sprite_sheet->cell_width, sprite_sheet->cell_height};
   vec2 bottom_left = {position[0] - size[0] * 0.5, position[1] - size[1] * 0.5};

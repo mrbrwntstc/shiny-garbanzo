@@ -5,6 +5,10 @@ find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_path(LINMATH_INCLUDE_DIRS "linmath.h/linmath.h")
 
+set(ANIMATION_SRC_FILES
+  "src/engine/animation/animation.c"
+)
+
 set(ARRAY_LIST_SRC_FILES
   "src/engine/array_list/array_list.c"
 )
@@ -38,6 +42,7 @@ set(TIME_SRC_FILES
 )
 
 set(ENGINE_HEADER_FILES
+  "src/engine/animation.h"
   "src/engine/array_list.h"
   "src/engine/config.h"
   "src/engine/entity.h"
@@ -54,6 +59,7 @@ set(ENGINE_HEADER_FILES
 )
 
 set(SOURCE_FILES
+  ${ANIMATION_SRC_FILES}
   ${ARRAY_LIST_SRC_FILES}
   ${CONFIG_SRC_FILES}
   ${ENTITY_SRC_FILES}

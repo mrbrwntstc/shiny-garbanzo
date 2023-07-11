@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "engine/animation.h"
 #include "engine/config.h"
 #include "engine/entity.h"
 #include "engine/global.h"
@@ -136,6 +137,7 @@ main (void)
   time_init (60);
   physics_init ();
   entity_init ();
+  animation_init ();
 
   u8 enemy_mask = Collision_Layer_Player | Collision_Layer_Terrain;
   u8 player_mask = Collision_Layer_Enemy | Collision_Layer_Terrain;
@@ -159,11 +161,24 @@ main (void)
   Sprite_Sheet sprite_sheet_player;
   render_sprite_sheet_init (&sprite_sheet_player, "assets/player.png", 24, 24);
 
+  usize adef_player_walk_id = animation_definition_create (&sprite_sheet_player, (f32[]){ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 }, (u8[]){ 0, 0, 0, 0, 0, 0, 0 }, (u8[]){ 1, 2, 3, 4, 5, 6, 7 }, 7);
+
+  usize adef_player_idle_id = animation_definition_create (&sprite_sheet_player, (f32[]){ 0 }, (u8[]){ 0 }, (u8[]){ 0 }, 1);
+  usize anim_player_walk_id = animation_create (adef_player_walk_id, true);
+  usize anim_plyer_idle_id = animation_create (adef_player_idle_id, false);
+
   while (!glfwWindowShouldClose (game_window)) {
     time_update ();
 
     Entity *player = entity_get (player_id);
     Body *body_player = physics_body_get (player->body_id);
+
+    if (body_player->velocity[0] != 0) {
+      player->animation_id = anim_player_walk_id;
+    } else {
+      player->animation_id = anim_plyer_idle_id;
+    }
+
     Static_Body *static_body_a = physics_static_body_get (static_body_a_id);
     Static_Body *static_body_b = physics_static_body_get (static_body_b_id);
     Static_Body *static_body_c = physics_static_body_get (static_body_c_id);
@@ -172,6 +187,7 @@ main (void)
 
     input_handle (body_player);
     physics_update ();
+    animation_update (global.time.dt);
 
     render_begin ();
 
@@ -185,9 +201,29 @@ main (void)
     render_aabb ((f32 *)physics_body_get (entity_get (entity_a_id)->body_id), WHITE);
     render_aabb ((f32 *)physics_body_get (entity_get (entity_b_id)->body_id), WHITE);
 
-    render_sprite_sheet_frame (&sprite_sheet_player, 1, 2, (vec2){ 100, 100 });
-    render_sprite_sheet_frame (&sprite_sheet_player, 0, 4, (vec2){ 200, 200 });
-    render_sprite_sheet_frame (&sprite_sheet_player, 0, 0, body_player->aabb.position);
+    // render animated entities
+    for (usize i = 0; i < entity_count (); i++) {
+      Entity *entity = entity_get (i);
+      if (entity->animation_id == (usize)-1) {
+        continue;
+      }
+
+      Body *body = physics_body_get (entity->body_id);
+      Animation *anim = animation_get (entity->animation_id);
+      Animation_Definition *adef = anim->definition;
+      Animation_Frame *aframe = &adef->frames[anim->current_frame_index];
+
+      if (body->velocity[0] < 0) {
+        anim->is_flipped = true;
+      } else if (body->velocity[0] > 0) {
+        anim->is_flipped = false;
+      }
+
+      render_sprite_sheet_frame (adef->sprite_sheet, aframe->row, aframe->column, body->aabb.position, anim->is_flipped);
+    }
+
+    render_sprite_sheet_frame (&sprite_sheet_player, 1, 2, (vec2){ 100, 100 }, false);
+    render_sprite_sheet_frame (&sprite_sheet_player, 0, 4, (vec2){ 200, 200 }, false);
 
     render_end (game_window, sprite_sheet_player.texture_id);
 

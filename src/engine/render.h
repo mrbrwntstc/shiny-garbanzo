@@ -5,6 +5,7 @@
 
 #include <GLFW/glfw3.h>
 #include <linmath.h/linmath.h>
+#include <stdbool.h>
 
 #include "types.h"
 
@@ -36,6 +37,6 @@ void render_aabb (f32 *aabb, vec4 color);
 f32 render_get_scale ();
 
 void render_sprite_sheet_init (Sprite_Sheet *sprite_sheet, const char *path, f32 cell_width, f32 cell_height);
-void render_sprite_sheet_frame (Sprite_Sheet *sprite_sheet, f32 row, f32 column, vec2 position);
+void render_sprite_sheet_frame (Sprite_Sheet *sprite_sheet, f32 row, f32 column, vec2 position, bool is_flipped);
 
 #endif // __ENGINE_RENDER_H__
