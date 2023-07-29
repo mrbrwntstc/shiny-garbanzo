@@ -15,6 +15,11 @@
 #include "engine/time.h"
 #include "engine/util.h"
 
+static const f32 SPPED_ENEMY_LARGE = 200;
+static const f32 SPEED_ENEMY_SMALL = 4000;
+static const f32 HEALTH_ENEMY_LARGE = 7;
+static const f32 HEALTH_ENEMY_SMALL = 3;
+
 // clang-format off
 typedef enum collision_layer {
   Collision_Layer_Player = 1,
@@ -113,14 +118,43 @@ player_on_hit_static (Body *self, Static_Body *other, Hit hit)
 }
 
 void
-enemy_on_hit_static (Body *self, Static_Body *other, Hit hit)
+enemy_small_on_hit_static (Body *self, Static_Body *other, Hit hit)
 {
   if (hit.normal[0] > 0) {
-    self->velocity[0] = 400;
+    self->velocity[0] = SPEED_ENEMY_SMALL;
   }
 
   if (hit.normal[0] < 0) {
-    self->velocity[0] = -400;
+    self->velocity[0] = -SPEED_ENEMY_SMALL;
+  }
+}
+
+void
+enemy_large_on_hit_static (Body *self, Static_Body *other, Hit hit)
+{
+  if (hit.normal[0] > 0) {
+    self->velocity[0] = SPPED_ENEMY_LARGE;
+  }
+
+  if (hit.normal[0] < 0) {
+    self->velocity[0] = -SPPED_ENEMY_LARGE;
+  }
+}
+
+void
+fire_on_hit (Body *self, Body *other, Hit hit)
+{
+  if (other->collision_layer == Collision_Layer_Enemy) {
+    for (usize i = 0; i < entity_count (); i++) {
+      Entity *entity = entity_get (i);
+
+      if (entity->body_id == hit.other_id) {
+        Body *body = physics_body_get (entity->body_id);
+        body->is_active = false;
+        entity->is_active = false;
+        break;
+      }
+    }
   }
 }
 
@@ -141,8 +175,9 @@ main (void)
 
   u8 enemy_mask = Collision_Layer_Player | Collision_Layer_Terrain;
   u8 player_mask = Collision_Layer_Enemy | Collision_Layer_Terrain;
+  u8 fire_mask = Collision_Layer_Enemy | Collision_Layer_Player;
 
-  usize player_id = entity_create ((vec2){ 100, 200 }, (vec2){ 24, 24 }, (vec2){ 0, 0 }, Collision_Layer_Player, player_mask, player_on_hit, player_on_hit_static);
+  usize player_id = entity_create ((vec2){ 100, 200 }, (vec2){ 24, 24 }, (vec2){ 0, 0 }, Collision_Layer_Player, player_mask, false, player_on_hit, player_on_hit_static);
 
   i32 game_window_width, game_window_height;
   glfwGetWindowSize (game_window, &game_window_width, &game_window_height);
@@ -155,8 +190,7 @@ main (void)
   u32 static_body_d_id = physics_static_body_create ((vec2){ 12.5, height * 0.5 - 12.5 }, (vec2){ 25, height - 25 }, Collision_Layer_Terrain);
   u32 static_body_e_id = physics_static_body_create ((vec2){ width * 0.5, height * 0.5 }, (vec2){ 62.5, 62.5 }, Collision_Layer_Terrain);
 
-  usize entity_a_id = entity_create ((vec2){ 200, 200 }, (vec2){ 25, 25 }, (vec2){ 400, 0 }, Collision_Layer_Enemy, enemy_mask, NULL, enemy_on_hit_static);
-  usize entity_b_id = entity_create ((vec2){ 300, 300 }, (vec2){ 25, 25 }, (vec2){ 400, 0 }, 0, enemy_mask, NULL, enemy_on_hit_static);
+  usize entity_fire = entity_create ((vec2){ 370, 50 }, (vec2){ 25, 25 }, (vec2){ 0 }, 0, fire_mask, true, fire_on_hit, NULL);
 
   Sprite_Sheet sprite_sheet_player;
   render_sprite_sheet_init (&sprite_sheet_player, "assets/player.png", 24, 24);
@@ -166,6 +200,8 @@ main (void)
   usize adef_player_idle_id = animation_definition_create (&sprite_sheet_player, (f32[]){ 0 }, (u8[]){ 0 }, (u8[]){ 0 }, 1);
   usize anim_player_walk_id = animation_create (adef_player_walk_id, true);
   usize anim_plyer_idle_id = animation_create (adef_player_idle_id, false);
+
+  f32 spawn_timer = 0;
 
   while (!glfwWindowShouldClose (game_window)) {
     time_update ();
@@ -189,7 +225,51 @@ main (void)
     physics_update ();
     animation_update (global.time.dt);
 
+    // spawn enemies
+    {
+      spawn_timer -= global.time.dt;
+      if (spawn_timer <= 0) {
+        spawn_timer = (f32)((rand () % 200) + 200) / 100.f;
+        spawn_timer *= 0.2;
+
+        for (u32 i = 0; i < 50; ++i) {
+
+          bool is_flipped = rand () % 100 >= 50;
+
+          f32 spawn_x = is_flipped ? 540 : 100;
+
+          // clang-format off
+          usize entity_id = entity_create(
+            (vec2){spawn_x, 200},
+            (vec2){20, 20},
+            (vec2){0, 0},
+            Collision_Layer_Enemy,
+            enemy_mask,
+            false,
+            NULL,
+            enemy_small_on_hit_static
+          );
+          // clang-format on
+          Entity *entity = entity_get (entity_id);
+          Body *body = physics_body_get (entity->body_id);
+          float speed = SPEED_ENEMY_SMALL * ((rand () % 100) * 0.01) + 100;
+          body->velocity[0] = is_flipped ? -speed : speed;
+        }
+      }
+    }
+
     render_begin ();
+
+    for (usize i = 0; i < entity_count (); i++) {
+      Entity *entity = entity_get (i);
+      Body *body = physics_body_get (entity->body_id);
+
+      if (body->is_active) {
+        render_aabb ((f32 *)body, TURQUOISE);
+      } else {
+        render_aabb ((f32 *)body, RED);
+      }
+    }
 
     render_aabb ((f32 *)static_body_a, WHITE);
     render_aabb ((f32 *)static_body_b, WHITE);
@@ -197,9 +277,6 @@ main (void)
     render_aabb ((f32 *)static_body_d, WHITE);
     render_aabb ((f32 *)static_body_e, WHITE);
     render_aabb ((f32 *)body_player, player_color);
-
-    render_aabb ((f32 *)physics_body_get (entity_get (entity_a_id)->body_id), WHITE);
-    render_aabb ((f32 *)physics_body_get (entity_get (entity_b_id)->body_id), WHITE);
 
     // render animated entities
     for (usize i = 0; i < entity_count (); i++) {
